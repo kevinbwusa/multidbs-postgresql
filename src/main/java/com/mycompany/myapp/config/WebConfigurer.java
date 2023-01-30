@@ -3,6 +3,7 @@ package com.mycompany.myapp.config;
 import static java.net.URLDecoder.decode;
 
 import java.io.File;
+import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.util.*;
@@ -66,19 +67,26 @@ public class WebConfigurer implements ServletContextInitializer, WebServerFactor
         if (server instanceof ConfigurableServletWebServerFactory) {
             ConfigurableServletWebServerFactory servletWebServer = (ConfigurableServletWebServerFactory) server;
             File root;
-            String prefixPath = resolvePathPrefix();
-            root = new File(prefixPath + "target/classes/static/");
-            if (root.exists() && root.isDirectory()) {
-                servletWebServer.setDocumentRoot(root);
+            String prefixPath;
+            try {
+                prefixPath = resolvePathPrefix();
+                root = new File(prefixPath + "target/classes/static/");
+                if (root.exists() && root.isDirectory()) {
+                    servletWebServer.setDocumentRoot(root);
+                }
+            } catch (UnsupportedEncodingException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
             }
         }
     }
 
     /**
      * Resolve path prefix to static resources.
+     * @throws UnsupportedEncodingException
      */
-    private String resolvePathPrefix() {
-        String fullExecutablePath = decode(this.getClass().getResource("").getPath(), StandardCharsets.UTF_8);
+    private String resolvePathPrefix() throws UnsupportedEncodingException {
+        String fullExecutablePath = decode(this.getClass().getResource("").getPath(), StandardCharsets.UTF_8.toString());
         String rootPath = Paths.get(".").toUri().normalize().getPath();
         String extractedPath = fullExecutablePath.replace(rootPath, "");
         int extractionEndIndex = extractedPath.indexOf("target/");
